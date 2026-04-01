@@ -1,0 +1,10 @@
+# Streamlit
+.streamlit/
+! .streamlit/config.toml
+
+# Google Cloud / Credentials
+*.json
+! datasource/*.csv
+
+# Project specific
+datasource/
