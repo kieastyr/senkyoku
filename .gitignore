@@ -4,10 +4,7 @@
 
 # Google Cloud / Credentials
 *.json
-! datasource/*.csv
 
 # Project specific
-# datasource/ はディレクトリ自体を無視せず、
-# その中の特定のファイル（CSV以外など）を無視するように調整
 datasource/*
-!datasource/*.csv
+!datasource/.gitkeep

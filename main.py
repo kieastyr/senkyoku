@@ -1,4 +1,5 @@
 import re
+
 import bcrypt
 import pandas as pd
 import streamlit as st
@@ -16,9 +17,8 @@ def check_password():
         pwd = st.session_state["password"]
         stored_hash = st.secrets["auth"]["password_hash"]
 
-        if (
-            user == st.secrets["auth"]["id"]
-            and bcrypt.checkpw(pwd.encode(), stored_hash.encode())
+        if user == st.secrets["auth"]["id"] and bcrypt.checkpw(
+            pwd.encode(), stored_hash.encode()
         ):
             st.session_state["password_correct"] = True
             del st.session_state["password"]  # Don't store password
@@ -47,11 +47,28 @@ def check_password():
 if not check_password():
     st.stop()  # Do not continue if check_password is not True
 
+from streamlit_gsheets import GSheetsConnection
+
+# --- Google Sheets Connection ---
+# ※ .streamlit/secrets.toml に接続設定が必要です
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+
 # --- Load Data ---
 @st.cache_data
 def load_data():
-    main_df = pd.read_csv("datasource/main_list.csv")
-    sub_df = pd.read_csv("datasource/sub_list.csv")
+    # Load from separate spreadsheets
+    sheet_url = st.secrets["connections"]["gsheets"]["input_list"]
+    main_df = conn.read(
+        spreadsheet=sheet_url,
+        worksheet="メイン曲",
+        ttl="10m",  # Cache for 10 minutes
+    )
+    sub_df = conn.read(
+        spreadsheet=sheet_url,
+        worksheet="サブ曲",
+        ttl="10m",
+    )
     return main_df, sub_df
 
 
@@ -251,12 +268,6 @@ with col2:
 
     if not all_selected.empty and not is_instruments_ok:
         st.error("❌ すべてのパートが条件を満たす必要があります。")
-
-from streamlit_gsheets import GSheetsConnection
-
-# --- Google Sheets Connection ---
-# ※ .streamlit/secrets.toml に接続設定が必要です
-conn = st.connection("gsheets", type=GSheetsConnection)
 
 
 # --- Submission Logic ---
