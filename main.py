@@ -159,14 +159,16 @@ from streamlit_gsheets import GSheetsConnection
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 # --- Submission Logic ---
-def submit_to_gsheets(user_name, user_comment, selected_songs_df, total_dur):
+def submit_to_gsheets(user_name, user_comment, main_idx, s1_idx, s2_idx, s3_idx, selected_songs_df, total_dur):
     """
     Submits the selection data to Google Sheets.
     """
-    # Create a summary row with "Composer/Song Name" format
-    song_list = selected_songs_df.apply(lambda r: f"{r['作曲者']}/{r['曲名']}", axis=1).tolist()
-    song_titles = " 、 ".join(song_list)
-    
+    def format_song(df, idx):
+        if idx is None:
+            return None
+        row = df.iloc[idx]
+        return f"{row['作曲者']}/{row['曲名']}"
+
     instrument_details = ""
     for col in INSTRUMENT_COLS:
         count = selected_songs_df[col].apply(parse_instrument).sum()
@@ -175,7 +177,10 @@ def submit_to_gsheets(user_name, user_comment, selected_songs_df, total_dur):
     new_row = pd.DataFrame([{
         "タイムスタンプ": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
         "提出者名": user_name,
-        "選択曲": song_titles,
+        "メイン曲": format_song(main_df, main_idx),
+        "サブ曲1": format_song(sub_df, s1_idx),
+        "サブ曲2": format_song(sub_df, s2_idx),
+        "サブ曲3": format_song(sub_df, s3_idx),
         "合計分数": total_dur,
         "楽器構成": instrument_details.strip(", "),
         "自由記入欄": user_comment
@@ -210,7 +215,16 @@ with st.form("submission_form"):
     submit_button = st.form_submit_button("提出する", disabled=not can_submit)
     
     if submit_button:
-        success = submit_to_gsheets(user_name, user_comment, all_selected, total_duration)
+        success = submit_to_gsheets(
+            user_name, 
+            user_comment, 
+            selected_main_idx,
+            sub1_idx,
+            sub2_idx,
+            sub3_idx,
+            all_selected, 
+            total_duration
+        )
         if success:
             st.success(f"提出を受け付けました！スプレッドシートに保存しました。ありがとうございます、{user_name}さん。")
             st.balloons()
