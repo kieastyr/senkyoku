@@ -1,10 +1,51 @@
 import re
-
+import bcrypt
 import pandas as pd
 import streamlit as st
 
 st.set_page_config(page_title="選曲システム", layout="wide")
 
+
+# --- Authentication ---
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        user = st.session_state["username"]
+        pwd = st.session_state["password"]
+        stored_hash = st.secrets["auth"]["password_hash"]
+
+        if (
+            user == st.secrets["auth"]["id"]
+            and bcrypt.checkpw(pwd.encode(), stored_hash.encode())
+        ):
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # Don't store password
+            del st.session_state["username"]
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # First run, show inputs for username and password.
+        st.text_input("ID", key="username")
+        st.text_input("Password", type="password", key="password")
+        st.button("Log in", on_click=password_entered)
+        return False
+    elif not st.session_state["password_correct"]:
+        # Password incorrect, show input + error.
+        st.text_input("ID", key="username")
+        st.text_input("Password", type="password", key="password")
+        st.button("Log in", on_click=password_entered)
+        st.error("😕 IDまたはパスワードが違います")
+        return False
+    else:
+        # Password correct.
+        return True
+
+
+if not check_password():
+    st.stop()  # Do not continue if check_password is not True
 
 # --- Load Data ---
 @st.cache_data
