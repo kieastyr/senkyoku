@@ -1,3 +1,9 @@
+# Dev Container
+.devcontainer/
+
+# Lock files
+*.lock
+
 # Streamlit
 .streamlit/
 ! .streamlit/config.toml
