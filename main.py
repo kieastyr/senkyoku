@@ -201,14 +201,28 @@ with col1:
     st.subheader("選択された曲の一覧")
     if not all_selected.empty:
         # Show table including comments
-        display_cols = [
-            "作曲者",
-            "曲名",
-            "分数",
-            "提出者からのコメント",
-        ] + INSTRUMENT_COLS
+        display_cols = (
+            [
+                "作曲者",
+                "曲名",
+                "分数",
+                "提出者からのコメント",
+            ]
+            + INSTRUMENT_COLS
+            + ["打楽器", "その他", "備考"]
+        )
+        
+        # Configure numeric columns to show as integers
+        column_config = {
+            col: st.column_config.NumberColumn(format="%d") 
+            for col in ["分数"] + INSTRUMENT_COLS
+        }
+
         st.dataframe(
-            all_selected[display_cols], use_container_width=True, hide_index=True
+            all_selected[display_cols], 
+            use_container_width=True, 
+            hide_index=True,
+            column_config=column_config
         )
 
         # Detailed Comments View
@@ -225,13 +239,13 @@ with col2:
     st.subheader("集計と条件判定")
 
     # Total Duration
-    total_duration = all_selected["分数"].sum() if not all_selected.empty else 0
+    total_duration = int(all_selected["分数"].sum()) if not all_selected.empty else 0
 
     # Instrument Aggregation
     instrument_sums = {}
     for col in INSTRUMENT_COLS:
         if not all_selected.empty:
-            instrument_sums[col] = all_selected[col].apply(parse_instrument).sum()
+            instrument_sums[col] = int(all_selected[col].apply(parse_instrument).sum())
         else:
             instrument_sums[col] = 0
 
