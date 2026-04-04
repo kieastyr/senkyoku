@@ -4,7 +4,7 @@ import bcrypt
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title="選曲システム", layout="wide")
+st.set_page_config(page_title="選曲ツール", layout="wide")
 
 
 # --- Authentication ---
@@ -117,7 +117,7 @@ instrument_min = {
 instrument_max = {k: 20 for k in INSTRUMENT_COLS}
 
 # --- UI ---
-st.title("🎼 選曲・提出システム")
+st.title("🎼 選曲組み合わせ提出ツール")
 
 st.sidebar.header("選曲")
 
@@ -129,7 +129,7 @@ def format_main(i):
     if i is None:
         return "選択してください"
     row = main_df.iloc[i]
-    return f"{row['作曲者']} / {row['曲名']} ({row['分数']}分)"
+    return f"{row['作曲者']} / {row['曲名']} ({int(row['分数'])}分)"
 
 
 selected_main_idx = st.sidebar.selectbox(
@@ -151,7 +151,7 @@ def format_sub(i):
     if i is None:
         return "選択しない"
     row = sub_df.iloc[i]
-    return f"{row['作曲者']} / {row['曲名']} ({row['分数']}分)"
+    return f"{row['作曲者']} / {row['曲名']} ({int(row['分数'])}分)"
 
 
 def get_sub_options(current_duration, exclude_indices):
@@ -211,18 +211,17 @@ with col1:
             + INSTRUMENT_COLS
             + ["打楽器", "その他", "備考"]
         )
-        
+
         # Configure numeric columns to show as integers
         column_config = {
-            col: st.column_config.NumberColumn(format="%d") 
-            for col in ["分数"] + INSTRUMENT_COLS
+            col: st.column_config.NumberColumn(format="%d") for col in ["分数"]
         }
 
         st.dataframe(
-            all_selected[display_cols], 
-            use_container_width=True, 
+            all_selected[display_cols],
+            use_container_width=True,
             hide_index=True,
-            column_config=column_config
+            column_config=column_config,
         )
 
         # Detailed Comments View
