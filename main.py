@@ -232,7 +232,7 @@ with col1:
                 with st.expander(f"💬 {row['作曲者']} / {row['曲名']}"):
                     st.write(comment)
     else:
-        st.info("左側のサイドバーから曲を選択してください。")
+        st.info("左上の>>からサイドバーを開いて曲を選択してください。")
 
 with col2:
     st.subheader("集計と条件判定")
