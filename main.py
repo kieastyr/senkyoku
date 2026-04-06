@@ -309,6 +309,28 @@ def submit_to_gsheets(
         count = selected_songs_df[col].apply(parse_instrument).sum()
         instrument_details += f"{col}:{count}, "
 
+    # Harp max
+    harp_max = 0
+    if "ハープ" in selected_songs_df.columns:
+        harp_max = int(selected_songs_df["ハープ"].apply(parse_instrument).max())
+
+    # Percussion union
+    percussion_set = set()
+    if "打楽器" in selected_songs_df.columns:
+        for p_str in selected_songs_df["打楽器"].dropna():
+            if str(p_str).strip() and p_str != "-":
+                parts = [p.strip() for p in str(p_str).split(",")]
+                percussion_set.update([p for p in parts if p])
+    percussion_union = ", ".join(sorted(percussion_set))
+
+    # Other concatenation
+    other_concat = ""
+    if "その他" in selected_songs_df.columns:
+        others = selected_songs_df["その他"].dropna()
+        other_concat = ", ".join(
+            [str(o).strip() for o in others if str(o).strip() and o != "-"]
+        )
+
     new_row = pd.DataFrame(
         [
             {
@@ -320,6 +342,9 @@ def submit_to_gsheets(
                 "サブ曲3": format_song(sub_df, s3_idx),
                 "合計分数": total_dur,
                 "楽器構成": instrument_details.strip(", "),
+                "ハープ最大数": harp_max,
+                "打楽器": percussion_union,
+                "その他": other_concat,
                 "自由記入欄": user_comment,
             }
         ]
