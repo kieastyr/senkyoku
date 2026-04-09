@@ -93,6 +93,18 @@ def parse_instrument(val):
     return sum(int(n) for n in numbers)
 
 
+def parse_percussion(val):
+    """
+    Extracts the required number of percussionists.
+    If a range like '4~5' is provided, the first number (4) is used.
+    """
+    if pd.isna(val) or val == "-" or str(val).strip() == "":
+        return 0
+    s = str(val).split("~")[0]
+    numbers = re.findall(r"\d+", s)
+    return int(numbers[0]) if numbers else 0
+
+
 # Instrument columns to validate
 INSTRUMENT_COLS = [
     "フルート",
@@ -209,7 +221,7 @@ with col1:
                 "提出者からのコメント",
             ]
             + INSTRUMENT_COLS
-            + ["打楽器", "その他", "備考"]
+            + ["打楽器", "打楽器必要人数", "その他", "備考"]
         )
 
         # Configure numeric columns to show as integers
@@ -250,6 +262,22 @@ with col2:
 
     # Validation Logic
     is_duration_ok = 0 < total_duration <= 100
+
+    # Percussion Validation
+    is_percussion_ok = True
+    main_perc = 0
+    if selected_main_idx is not None:
+        main_perc = parse_percussion(
+            main_df.iloc[selected_main_idx].get("打楽器必要人数", 0)
+        )
+        sub_percs = [
+            parse_percussion(sub_df.iloc[i].get("打楽器必要人数", 0))
+            for i in selected_sub_indices
+        ]
+        if main_perc <= 1:
+            if not any(p >= 3 for p in sub_percs):
+                is_percussion_ok = False
+
     is_instruments_ok = (
         all(
             (
@@ -258,6 +286,7 @@ with col2:
             )
             for i in INSTRUMENT_COLS
         )
+        and is_percussion_ok
         if not all_selected.empty
         else False
     )
@@ -278,6 +307,16 @@ with col2:
             st.write(f"✅ {part}: {count} ({min_num}~{max_num})")
         else:
             st.write(f"❌ {part}: {count} ({min_num}~{max_num})")
+
+    # Percussion special condition
+    if selected_main_idx is not None:
+        if is_percussion_ok:
+            if main_perc <= 1:
+                st.write(f"✅ 打楽器: メイン{main_perc}名に対し、サブ曲で3名以上を必要とする曲を1曲以上確保しています")
+            else:
+                st.write(f"✅ 打楽器: メイン{main_perc}名のため、特別な制限はありません")
+        else:
+            st.write(f"❌ 打楽器: メイン{main_perc}名の場合、サブ曲のいずれかに3名以上の曲が必要です")
 
     if not all_selected.empty and not is_instruments_ok:
         st.error("❌ すべてのパートが条件を満たす必要があります。")
