@@ -411,7 +411,7 @@ st.divider()
 st.subheader("提出フォーム")
 
 with st.form("submission_form"):
-    user_name = st.text_input("提出者名")
+    user_name = st.text_input("提出者名（必須）")
     user_comment = st.text_area("自由記入欄（選曲理由など）")
 
     can_submit = is_duration_ok and is_instruments_ok
@@ -419,21 +419,24 @@ with st.form("submission_form"):
     submit_button = st.form_submit_button("提出する", disabled=not can_submit)
 
     if submit_button:
-        success = submit_to_gsheets(
-            user_name,
-            user_comment,
-            selected_main_idx,
-            sub1_idx,
-            sub2_idx,
-            sub3_idx,
-            all_selected,
-            total_duration,
-        )
-        if success:
-            st.success(
-                f"提出を受け付けました！スプレッドシートに保存しました。ありがとうございます、{user_name}さん。"
+        if not user_name.strip():
+            st.error("❌ 提出者名を入力してください。")
+        else:
+            success = submit_to_gsheets(
+                user_name,
+                user_comment,
+                selected_main_idx,
+                sub1_idx,
+                sub2_idx,
+                sub3_idx,
+                all_selected,
+                total_duration,
             )
-            st.balloons()
+            if success:
+                st.success(
+                    f"提出を受け付けました！スプレッドシートに保存しました。ありがとうございます、{user_name}さん。"
+                )
+                st.balloons()
 
 if not can_submit and not all_selected.empty:
     st.warning("提出するには、すべての条件を満たす必要があります。")
