@@ -166,16 +166,22 @@ def format_sub(i):
     return f"{row['作曲者']} / {row['曲名']} ({int(row['分数'])}分)"
 
 
-def get_sub_options(current_duration, exclude_indices):
+def get_sub_options(current_duration, exclude_indices, main_idx):
     remaining = 100 - current_duration
     # 分数が残り時間以下、かつ既に選択されていない曲をフィルタリング
     mask = (sub_df["分数"] <= remaining) & (~sub_df.index.isin(exclude_indices))
+
+    if main_idx is not None:
+        main_row = main_df.iloc[main_idx]
+        # 作曲者と曲名が一致する曲をサブ曲の選択肢から除外
+        mask &= ~((sub_df["作曲者"] == main_row["作曲者"]) & (sub_df["曲名"] == main_row["曲名"]))
+
     available = sub_df[mask]
     return [None] + list(available.index)
 
 
 # サブ曲 1
-opts1 = get_sub_options(total_main_duration, [])
+opts1 = get_sub_options(total_main_duration, [], selected_main_idx)
 sub1_idx = st.sidebar.selectbox(
     "サブ曲 1", options=opts1, format_func=format_sub, key="sub1"
 )
@@ -183,7 +189,7 @@ sub1_dur = sub_df.iloc[sub1_idx]["分数"] if sub1_idx is not None else 0
 
 # サブ曲 2
 exclude2 = [i for i in [sub1_idx] if i is not None]
-opts2 = get_sub_options(total_main_duration + sub1_dur, exclude2)
+opts2 = get_sub_options(total_main_duration + sub1_dur, exclude2, selected_main_idx)
 sub2_idx = st.sidebar.selectbox(
     "サブ曲 2", options=opts2, format_func=format_sub, key="sub2"
 )
@@ -191,7 +197,7 @@ sub2_dur = sub_df.iloc[sub2_idx]["分数"] if sub2_idx is not None else 0
 
 # サブ曲 3
 exclude3 = [i for i in [sub1_idx, sub2_idx] if i is not None]
-opts3 = get_sub_options(total_main_duration + sub1_dur + sub2_dur, exclude3)
+opts3 = get_sub_options(total_main_duration + sub1_dur + sub2_dur, exclude3, selected_main_idx)
 sub3_idx = st.sidebar.selectbox(
     "サブ曲 3", options=opts3, format_func=format_sub, key="sub3"
 )
