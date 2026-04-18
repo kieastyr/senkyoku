@@ -47,6 +47,11 @@ def check_password():
 if not check_password():
     st.stop()  # Do not continue if check_password is not True
 
+# --- 応募終了画面 ---
+st.title("🎼 選曲組み合わせ提出ツール")
+st.warning("現在、応募は終了しています。不明点は運営者までお問い合わせください。")
+st.stop()  # Stop execution to prevent access to the rest of the app
+
 from streamlit_gsheets import GSheetsConnection
 
 # --- Google Sheets Connection ---
@@ -129,8 +134,6 @@ instrument_min = {
 instrument_max = {k: 20 for k in INSTRUMENT_COLS}
 
 # --- UI ---
-st.title("🎼 選曲組み合わせ提出ツール")
-
 st.sidebar.header("選曲")
 
 # Main List Selection (Single Selection)
@@ -174,7 +177,10 @@ def get_sub_options(current_duration, exclude_indices, main_idx):
     if main_idx is not None:
         main_row = main_df.iloc[main_idx]
         # 作曲者と曲名が一致する曲をサブ曲の選択肢から除外
-        mask &= ~((sub_df["作曲者"] == main_row["作曲者"]) & (sub_df["曲名"] == main_row["曲名"]))
+        mask &= ~(
+            (sub_df["作曲者"] == main_row["作曲者"])
+            & (sub_df["曲名"] == main_row["曲名"])
+        )
 
     available = sub_df[mask]
     return [None] + list(available.index)
@@ -197,7 +203,9 @@ sub2_dur = sub_df.iloc[sub2_idx]["分数"] if sub2_idx is not None else 0
 
 # サブ曲 3
 exclude3 = [i for i in [sub1_idx, sub2_idx] if i is not None]
-opts3 = get_sub_options(total_main_duration + sub1_dur + sub2_dur, exclude3, selected_main_idx)
+opts3 = get_sub_options(
+    total_main_duration + sub1_dur + sub2_dur, exclude3, selected_main_idx
+)
 sub3_idx = st.sidebar.selectbox(
     "サブ曲 3", options=opts3, format_func=format_sub, key="sub3"
 )
@@ -318,11 +326,17 @@ with col2:
     if selected_main_idx is not None:
         if is_percussion_ok:
             if main_perc <= 1:
-                st.write(f"✅ 打楽器: メイン{main_perc}名に対し、サブ曲で3名以上を必要とする曲を1曲以上確保しています")
+                st.write(
+                    f"✅ 打楽器: メイン{main_perc}名に対し、サブ曲で3名以上を必要とする曲を1曲以上確保しています"
+                )
             else:
-                st.write(f"✅ 打楽器: メイン{main_perc}名のため、特別な制限はありません")
+                st.write(
+                    f"✅ 打楽器: メイン{main_perc}名のため、特別な制限はありません"
+                )
         else:
-            st.write(f"❌ 打楽器: メイン{main_perc}名の場合、サブ曲のいずれかに3名以上の曲が必要です")
+            st.write(
+                f"❌ 打楽器: メイン{main_perc}名の場合、サブ曲のいずれかに3名以上の曲が必要です"
+            )
 
     if not all_selected.empty and not is_instruments_ok:
         st.error("❌ すべてのパートが条件を満たす必要があります。")
