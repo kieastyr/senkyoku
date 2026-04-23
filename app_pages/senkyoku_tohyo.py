@@ -25,7 +25,6 @@ def logout():
 st.button("ログアウト", on_click=logout)
 
 # --- LINE Login Configuration ---
-# これらの値は LINE Developers コンソールから取得し、.streamlit/secrets.toml に設定してください。
 LINE_CLIENT_ID = st.secrets.get("line", {}).get("client_id", "YOUR_CLIENT_ID")
 LINE_CLIENT_SECRET = st.secrets.get("line", {}).get("client_secret", "YOUR_CLIENT_SECRET")
 LINE_REDIRECT_URI = st.secrets.get("line", {}).get("redirect_uri", "YOUR_REDIRECT_URI")
@@ -46,13 +45,10 @@ def get_line_login_url():
 
 def handle_line_callback():
     """Handles the callback from LINE Login."""
-    # st.query_params は 2026年時点の最新仕様を使用
     code = st.query_params.get("code")
     state = st.query_params.get("state")
     
     if code and state:
-        # 本来は state の一致確認が必要ですが、Streamlitの再読み込みで消失しやすいため
-        # 開発時は一旦チェックを緩めるか、ログに詳細を出すようにします。
         stored_state = st.session_state.get("line_auth_state")
         if state != stored_state:
             st.warning(f"State mismatch (Expected: {stored_state}, Got: {state}). Proceeding anyway for debugging...")
@@ -82,7 +78,6 @@ def handle_line_callback():
                 if profile_response.status_code == 200:
                     user_profile = profile_response.json()
                     st.session_state["line_user"] = user_profile
-                    # 成功したらクエリパラメータを消してリダイレクト
                     st.query_params.clear()
                     st.rerun()
                 else:
@@ -92,23 +87,20 @@ def handle_line_callback():
 
 # --- Authentication Logic ---
 if "line_user" not in st.session_state:
-    # Check if this is a callback
     if "code" in st.query_params:
         handle_line_callback()
     else:
         st.write("このページを利用するにはLINEアカウントでのログインが必要です。")
         login_url = get_line_login_url()
-        st.link_button("LINEでログイン", login_url)
-        st.stop()
-
-# --- Main Content (After Authentication) ---
-user = st.session_state["line_user"]
-st.write(f"認証済み: **{user.get('displayName')}** さん (LINE ID: {user.get('userId')})")
-
-st.divider()
-st.header("HelloWorld!")
-st.write("LINE認証が正常に完了しました。")
-
+        
+        # モバイル対応: 同じタブでリダイレクトさせるためのカスタムボタン
+        st.markdown(
+            f"""
+            <a href="{login_url}" target="_self" style="text-decoration: none;">
+                <div style="
+                    background-color: #06C755;
+                    color: white;
+                    padding: 0.6rem 1rem;
                     border-radius: 0.5rem;
                     text-align: center;
                     font-weight: bold;
