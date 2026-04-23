@@ -1,6 +1,11 @@
+import logging
 import pandas as pd
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
+
+# --- Logging Configuration ---
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 st.title("🗳️ 選曲投票画面")
 
@@ -200,9 +205,7 @@ with st.form("voting_form"):
                 conn.update(worksheet="集計", data=updated_votes)
 
                 # Standard output logging
-                print(
-                    f"[{timestamp}] Vote received: Pos({pos1}, {pos2}, {pos3}), Neg({neg1})"
-                )
+                logger.info(f"Vote received: Pos({pos1}, {pos2}, {pos3}), Neg({neg1})")
 
                 st.success("投票が完了しました！")
                 st.balloons()
