@@ -9,8 +9,11 @@ st.set_page_config(page_title="選曲ツール", layout="wide")
 
 # --- LINE Login Configuration ---
 LINE_CLIENT_ID = st.secrets.get("line", {}).get("client_id", "YOUR_CLIENT_ID")
-LINE_CLIENT_SECRET = st.secrets.get("line", {}).get("client_secret", "YOUR_CLIENT_SECRET")
+LINE_CLIENT_SECRET = st.secrets.get("line", {}).get(
+    "client_secret", "YOUR_CLIENT_SECRET"
+)
 LINE_REDIRECT_URI = st.secrets.get("line", {}).get("redirect_uri", "YOUR_REDIRECT_URI")
+
 
 def get_line_login_url():
     state = secrets.token_urlsafe(16)
@@ -23,7 +26,10 @@ def get_line_login_url():
         "scope": "profile openid",
         "bot_prompt": "normal",
     }
-    return f"https://access.line.me/oauth2/v2.1/authorize?{urllib.parse.urlencode(params)}"
+    return (
+        f"https://access.line.me/oauth2/v2.1/authorize?{urllib.parse.urlencode(params)}"
+    )
+
 
 def handle_line_callback():
     code = st.query_params.get("code")
@@ -43,23 +49,29 @@ def handle_line_callback():
         if response.status_code == 200:
             token_data = response.json()
             access_token = token_data.get("access_token")
-            profile_response = requests.get("https://api.line.me/v2/profile", headers={"Authorization": f"Bearer {access_token}"})
+            profile_response = requests.get(
+                "https://api.line.me/v2/profile",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
             if profile_response.status_code == 200:
                 user_profile = profile_response.json()
                 st.session_state["line_user"] = user_profile
                 st.session_state["password_correct"] = True
                 st.session_state["role"] = "tohyo"
-                st.session_state["username_logged_in"] = f"LINE:{user_profile.get('displayName')}"
+                st.session_state["username_logged_in"] = (
+                    f"LINE:{user_profile.get('displayName')}"
+                )
                 st.query_params.clear()
                 st.rerun()
+
 
 # --- Authentication Configuration ---
 USER_ROLES = {
     "senkyoku_user": "user",
     "senkyoku_voter": "voter",
     "senkyoku_result": "result",
-    "senkyoku_tohyo": "tohyo",
 }
+
 
 def check_password():
     # Handle LINE Callback first
@@ -93,8 +105,11 @@ def check_password():
     st.text_input("ID", key="username")
     st.text_input("Password", type="password", key="password")
     st.button("Log in", on_click=password_entered)
-    
-    if "password_correct" in st.session_state and not st.session_state["password_correct"]:
+
+    if (
+        "password_correct" in st.session_state
+        and not st.session_state["password_correct"]
+    ):
         st.error("😕 IDまたはパスワードが違います")
 
     # --- LINE Login Option ---
@@ -106,8 +121,9 @@ def check_password():
     # スマホ対応のため別タブ(リンク)で案内
     st.link_button("📱 LINEでログイン", login_url, width="stretch")
     st.caption("※LINE認証による本人確認が必要です。")
-    
+
     return False
+
 
 if not check_password():
     st.stop()
@@ -119,7 +135,9 @@ pages = {
     "user": [st.Page("app_pages/senkyoku_user.py", title="選曲・提出", icon="🎼")],
     "voter": [st.Page("app_pages/senkyoku_voter.py", title="選曲投票", icon="🗳️")],
     "result": [st.Page("app_pages/senkyoku_result.py", title="結果表示", icon="📊")],
-    "tohyo": [st.Page("app_pages/senkyoku_tohyo.py", title="選曲投票 (LINE)", icon="📱")],
+    "tohyo": [
+        st.Page("app_pages/senkyoku_tohyo.py", title="選曲投票 (LINE)", icon="📱")
+    ],
 }
 
 pg = st.navigation(pages.get(role, []))
