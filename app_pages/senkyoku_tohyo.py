@@ -84,7 +84,6 @@ def handle_line_callback():
                     st.error(f"プロフィールの取得に失敗しました: {profile_response.text}")
             else:
                 st.error(f"トークン交換に失敗しました。Redirect URIが一致しているか確認してください。\nStatus: {response.status_code}\nResponse: {response.text}")
-
 # --- Authentication Logic ---
 if "line_user" not in st.session_state:
     if "code" in st.query_params:
@@ -92,32 +91,18 @@ if "line_user" not in st.session_state:
     else:
         st.write("このページを利用するにはLINEアカウントでのログインが必要です。")
         login_url = get_line_login_url()
-        
-        # モバイル・iframe対応: target="_top" で親ウィンドウごと遷移させる
-        # これによりリンクが反応し、かつ COOP 制限を回避します
-        st.markdown(
-            f"""
-            <a href="{login_url}" target="_top" style="text-decoration: none;">
-                <div style="
-                    background-color: #06C755;
-                    color: white;
-                    padding: 0.6rem 1rem;
-                    border-radius: 0.5rem;
-                    text-align: center;
-                    font-weight: bold;
-                    cursor: pointer;
-                    border: none;
-                    display: inline-block;
-                    width: 100%;
-                    font-size: 1rem;
-                ">
-                    LINEでログイン
-                </div>
-            </a>
-            """,
-            unsafe_allow_html=True
-        )
+
+        # 確実に反応する標準ボタンと、メタタグによるリダイレクトを組み合わせる
+        if st.button("LINEでログイン", width="stretch"):
+            st.markdown(f'<meta http-equiv="refresh" content="0; url={login_url}">', unsafe_allow_html=True)
+            st.write("リダイレクト中...")
+            st.stop()
+
+        st.write("---")
+        st.caption("※ボタンが反応しない場合は、以下のリンクを直接クリックしてください。")
+        st.markdown(f'<a href="{login_url}" target="_top">LINE認証ページへ直接移動</a>', unsafe_allow_html=True)
         st.stop()
+
 
 # --- Main Content (After Authentication) ---
 user = st.session_state["line_user"]
