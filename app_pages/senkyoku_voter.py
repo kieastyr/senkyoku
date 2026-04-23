@@ -7,8 +7,19 @@ from streamlit_gsheets import GSheetsConnection
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-st.title("🗳️ 選曲投票画面")
+def get_client_info():
+    """Gathers identification info for logging."""
+    try:
+        headers = st.context.headers
+        # Get IP address (considering potential proxies)
+        ip = headers.get("X-Forwarded-For", headers.get("Remote-Addr", "unknown")).split(",")[0]
+        user_agent = headers.get("User-Agent", "unknown")
+        username = st.session_state.get("username_logged_in", "unknown")
+        return f"[User: {username}] [IP: {ip}] [UA: {user_agent}]"
+    except Exception:
+        return "[Client Info: unknown]"
 
+st.title("🗳️ 選曲投票画面")
 
 # --- Logout Button ---
 def logout():
@@ -19,12 +30,10 @@ def logout():
         del st.session_state["username_logged_in"]
     st.rerun()
 
-
 st.button("ログアウト", on_click=logout)
 
 # --- Google Sheets Connection ---
 conn = st.connection("gsheets", type=GSheetsConnection)
-
 
 # --- Load Data ---
 @st.cache_data(ttl="5m")
@@ -38,7 +47,6 @@ def load_data():
     except Exception:
         df_votes = pd.DataFrame()
     return df_combinations, df_votes
-
 
 try:
     df_combinations, df_votes = load_data()
@@ -64,14 +72,14 @@ for col in ["合計分数", "ハープ最大数"]:
             pd.to_numeric(df_combinations[col], errors="coerce").fillna(0).astype(int)
         )
 
-# --- Detail View (Select to View) ---
+# --- All Candidates List ---
 st.subheader("📜 全候補一覧")
 st.dataframe(df_combinations, width="stretch", hide_index=True)
 st.divider()
 
+# --- Detail View (Select to View) ---
 st.subheader("🧐 組み合わせの詳細をチェック")
 st.info("以下のリストからIDを選択して、詳しい曲構成や楽器編成を確認できます。")
-
 
 # ID options with formatted labels
 def format_combination_label(option_id):
@@ -82,7 +90,6 @@ def format_combination_label(option_id):
         if pd.notna(val) and str(val).strip() and str(val) != "None":
             label += f" | {val}"
     return label
-
 
 selected_id = st.selectbox(
     "詳細を表示する組み合わせを選択",
@@ -124,34 +131,23 @@ st.divider()
 
 # --- Voting Form ---
 st.subheader("🗳️ 投票フォーム")
-st.write("Positiveを3つ、Negativeを1つ選択してください。")
+st.write("👍を3つ、👎を1つ選択してください。")
 
 with st.form("voting_form"):
-    # user_name input removed as per request
-
     options = df_combinations["ID"].tolist()
 
     col1, col2 = st.columns(2)
     with col1:
         st.write("**👍 (各+1pt)**")
-        pos1 = st.selectbox(
-            "👍 1", options, format_func=format_combination_label, key="pos1"
-        )
-        pos2 = st.selectbox(
-            "👍 2", options, format_func=format_combination_label, key="pos2"
-        )
-        pos3 = st.selectbox(
-            "👍 3", options, format_func=format_combination_label, key="pos3"
-        )
+        pos1 = st.selectbox("👍 1", options, format_func=format_combination_label, key="pos1")
+        pos2 = st.selectbox("👍 2", options, format_func=format_combination_label, key="pos2")
+        pos3 = st.selectbox("👍 3", options, format_func=format_combination_label, key="pos3")
 
     with col2:
         st.write("**👎 (-1pt)**")
-        neg1 = st.selectbox(
-            "👎", options, format_func=format_combination_label, key="neg1"
-        )
+        neg1 = st.selectbox("👎", options, format_func=format_combination_label, key="neg1")
 
     comment = st.text_area("選考の理由やコメント（任意）")
-
     submit_button = st.form_submit_button("投票を送信", width="stretch")
 
     if submit_button:
@@ -160,42 +156,13 @@ with st.form("voting_form"):
         else:
             # Prepare new votes
             timestamp = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
-            # Set voter name to "Anonymous" or empty since it's not required
             voter_name = "Anonymous"
 
             new_rows = [
-                {
-                    "タイムスタンプ": timestamp,
-                    "投票者": voter_name,
-                    "ID": pos1,
-                    "Point": 1,
-                    "Type": "👍",
-                    "コメント": comment,
-                },
-                {
-                    "タイムスタンプ": timestamp,
-                    "投票者": voter_name,
-                    "ID": pos2,
-                    "Point": 1,
-                    "Type": "👍",
-                    "コメント": comment,
-                },
-                {
-                    "タイムスタンプ": timestamp,
-                    "投票者": voter_name,
-                    "ID": pos3,
-                    "Point": 1,
-                    "Type": "👍",
-                    "コメント": comment,
-                },
-                {
-                    "タイムスタンプ": timestamp,
-                    "投票者": voter_name,
-                    "ID": neg1,
-                    "Point": -1,
-                    "Type": "👎",
-                    "コメント": comment,
-                },
+                {"タイムスタンプ": timestamp, "投票者": voter_name, "ID": pos1, "Point": 1, "Type": "👍", "コメント": comment},
+                {"タイムスタンプ": timestamp, "投票者": voter_name, "ID": pos2, "Point": 1, "Type": "👍", "コメント": comment},
+                {"タイムスタンプ": timestamp, "投票者": voter_name, "ID": pos3, "Point": 1, "Type": "👍", "コメント": comment},
+                {"タイムスタンプ": timestamp, "投票者": voter_name, "ID": neg1, "Point": -1, "Type": "👎", "コメント": comment},
             ]
             new_votes_df = pd.DataFrame(new_rows)
 
@@ -204,8 +171,9 @@ with st.form("voting_form"):
                 updated_votes = pd.concat([df_votes, new_votes_df], ignore_index=True)
                 conn.update(worksheet="集計", data=updated_votes)
 
-                # Standard output logging
-                logger.info(f"Vote received: Pos({pos1}, {pos2}, {pos3}), Neg({neg1})")
+                # Standard output logging with identification info
+                client_info = get_client_info()
+                logger.info(f"{client_info} Vote received: 👍({pos1}, {pos2}, {pos3}), 👎({neg1})")
 
                 st.success("投票が完了しました！")
                 st.balloons()
