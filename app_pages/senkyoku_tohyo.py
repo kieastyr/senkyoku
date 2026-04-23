@@ -51,7 +51,7 @@ def handle_line_callback():
     if code and state:
         stored_state = st.session_state.get("line_auth_state")
         if state != stored_state:
-            st.warning(f"State mismatch (Expected: {stored_state}, Got: {state}). Proceeding anyway for debugging...")
+            st.warning("セッションが切り替わった可能性があります。認証を続行します...")
 
         # Exchange code for access token
         token_url = "https://api.line.me/oauth2/v2.1/token"
@@ -83,7 +83,8 @@ def handle_line_callback():
                 else:
                     st.error(f"プロフィールの取得に失敗しました: {profile_response.text}")
             else:
-                st.error(f"トークン交換に失敗しました。Redirect URIが一致しているか確認してください。\nStatus: {response.status_code}\nResponse: {response.text}")
+                st.error(f"トークン交換に失敗しました。SecretsのRedirect URIが、LINEコンソールの設定と完全に一致しているか確認してください。\nStatus: {response.status_code}")
+
 # --- Authentication Logic ---
 if "line_user" not in st.session_state:
     if "code" in st.query_params:
@@ -91,22 +92,15 @@ if "line_user" not in st.session_state:
     else:
         st.write("このページを利用するにはLINEアカウントでのログインが必要です。")
         login_url = get_line_login_url()
-
-        # 確実に反応する標準ボタンと、メタタグによるリダイレクトを組み合わせる
-        if st.button("LINEでログイン", width="stretch"):
-            st.markdown(f'<meta http-equiv="refresh" content="0; url={login_url}">', unsafe_allow_html=True)
-            st.write("リダイレクト中...")
-            st.stop()
-
-        st.write("---")
-        st.caption("※ボタンが反応しない場合は、以下のリンクを直接クリックしてください。")
-        st.markdown(f'<a href="{login_url}" target="_top">LINE認証ページへ直接移動</a>', unsafe_allow_html=True)
+        
+        # セキュリティ制限を回避するため、新しいタブで開く標準ボタンを使用
+        st.link_button("LINEでログイン", login_url, width="stretch")
+        st.info("※ブラウザのセキュリティ制限を回避するため、新しいタブが開きます。認証後はそのタブのまま操作を続けてください。")
         st.stop()
-
 
 # --- Main Content (After Authentication) ---
 user = st.session_state["line_user"]
-st.write(f"認証済み: **{user.get('displayName')}** さん (LINE ID: {user.get('userId')})")
+st.write(f"認証済み: **{user.get('displayName')}** さん")
 
 st.divider()
 st.header("HelloWorld!")
