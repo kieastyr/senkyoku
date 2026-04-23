@@ -40,6 +40,7 @@ def get_line_login_url():
         "redirect_uri": LINE_REDIRECT_URI,
         "state": state,
         "scope": "profile openid",
+        "bot_prompt": "normal",
     }
     return f"https://access.line.me/oauth2/v2.1/authorize?{urllib.parse.urlencode(params)}"
 
@@ -98,6 +99,30 @@ if "line_user" not in st.session_state:
         st.write("このページを利用するにはLINEアカウントでのログインが必要です。")
         login_url = get_line_login_url()
         st.link_button("LINEでログイン", login_url)
+        st.stop()
+
+# --- Main Content (After Authentication) ---
+user = st.session_state["line_user"]
+st.write(f"認証済み: **{user.get('displayName')}** さん (LINE ID: {user.get('userId')})")
+
+st.divider()
+st.header("HelloWorld!")
+st.write("LINE認証が正常に完了しました。")
+
+                    border-radius: 0.5rem;
+                    text-align: center;
+                    font-weight: bold;
+                    cursor: pointer;
+                    border: none;
+                    display: inline-block;
+                    width: 100%;
+                ">
+                    LINEでログイン
+                </div>
+            </a>
+            """,
+            unsafe_allow_html=True
+        )
         st.stop()
 
 # --- Main Content (After Authentication) ---
