@@ -100,6 +100,30 @@ if "line_user" not in st.session_state:
 
 # --- Main Content (After Authentication) ---
 user = st.session_state["line_user"]
+# 実行のたびに他の端末でログインされていないかチェック
+check_concurrent_login(user.get("userId"))
+
+st.write(f"認証済み: **{user.get('displayName')}** さん")
+
+st.divider()
+st.header("HelloWorld!")
+st.write("LINE認証が正常に完了しました。")
+
+        st.stop()
+
+# --- Main Content (After Authentication) ---
+user = st.session_state["line_user"]
+st.write(f"認証済み: **{user.get('displayName')}** さん")
+
+st.divider()
+st.header("HelloWorld!")
+st.write("LINE認証が正常に完了しました。")
+INEでログイン", login_url, width="stretch")
+        st.info("※ブラウザのセキュリティ制限を回避するため、新しいタブが開きます。認証後はそのタブのまま操作を続けてください。")
+        st.stop()
+
+# --- Main Content (After Authentication) ---
+user = st.session_state["line_user"]
 st.write(f"認証済み: **{user.get('displayName')}** さん")
 
 st.divider()
