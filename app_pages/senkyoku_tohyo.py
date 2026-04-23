@@ -8,6 +8,26 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
+# --- Global Session Manager ---
+# 全ユーザーで共有されるセッション管理テーブル
+@st.cache_resource
+def get_session_manager():
+    return {}  # {line_user_id: current_session_token}
+
+session_manager = get_session_manager()
+
+def check_concurrent_login(line_user_id):
+    """同一LINE IDでの複数ログインをチェックし、古いセッションを追い出す"""
+    current_token = st.session_state.get("session_token")
+    latest_token = session_manager.get(line_user_id)
+    
+    if latest_token and current_token != latest_token:
+        # 他の端末で新しいログインがあった場合
+        st.error("⚠️ 他の端末でこのLINEアカウントによるログインがあったため、このセッションは無効化されました。")
+        if st.button("ログイン画面に戻る"):
+            logout()
+        st.stop()
+
 # --- Page Configurations ---
 st.title("🗳️ 選曲投票 (LINE認証)")
 
@@ -20,6 +40,8 @@ def logout():
         del st.session_state["username_logged_in"]
     if "line_user" in st.session_state:
         del st.session_state["line_user"]
+    if "session_token" in st.session_state:
+        del st.session_state["session_token"]
     st.rerun()
 
 st.button("ログアウト", on_click=logout)
@@ -77,13 +99,20 @@ def handle_line_callback():
                 
                 if profile_response.status_code == 200:
                     user_profile = profile_response.json()
+                    line_id = user_profile.get("userId")
+                    
+                    # セッション管理テーブルを更新（最新のログインとして登録）
+                    new_token = secrets.token_urlsafe(16)
+                    session_manager[line_id] = new_token
+                    st.session_state["session_token"] = new_token
                     st.session_state["line_user"] = user_profile
+                    
                     st.query_params.clear()
                     st.rerun()
                 else:
                     st.error(f"プロフィールの取得に失敗しました: {profile_response.text}")
             else:
-                st.error(f"トークン交換に失敗しました。SecretsのRedirect URIが、LINEコンソールの設定と完全に一致しているか確認してください。\nStatus: {response.status_code}")
+                st.error(f"トークン交換に失敗しました。SecretsのRedirect URIが一致しているか確認してください。\nStatus: {response.status_code}")
 
 # --- Authentication Logic ---
 if "line_user" not in st.session_state:
@@ -103,27 +132,6 @@ user = st.session_state["line_user"]
 # 実行のたびに他の端末でログインされていないかチェック
 check_concurrent_login(user.get("userId"))
 
-st.write(f"認証済み: **{user.get('displayName')}** さん")
-
-st.divider()
-st.header("HelloWorld!")
-st.write("LINE認証が正常に完了しました。")
-
-        st.stop()
-
-# --- Main Content (After Authentication) ---
-user = st.session_state["line_user"]
-st.write(f"認証済み: **{user.get('displayName')}** さん")
-
-st.divider()
-st.header("HelloWorld!")
-st.write("LINE認証が正常に完了しました。")
-INEでログイン", login_url, width="stretch")
-        st.info("※ブラウザのセキュリティ制限を回避するため、新しいタブが開きます。認証後はそのタブのまま操作を続けてください。")
-        st.stop()
-
-# --- Main Content (After Authentication) ---
-user = st.session_state["line_user"]
 st.write(f"認証済み: **{user.get('displayName')}** さん")
 
 st.divider()
