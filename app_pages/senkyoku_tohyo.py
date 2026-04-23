@@ -93,24 +93,27 @@ if "line_user" not in st.session_state:
         st.write("このページを利用するにはLINEアカウントでのログインが必要です。")
         login_url = get_line_login_url()
         
-        # モバイル・iframe対応: 親ウィンドウ(window.top)をリダイレクトさせる
-        # これにより net::ERR_BLOCKED_BY_RESPONSE や iframe の制限を回避します
+        # モバイル・iframe対応: target="_top" で親ウィンドウごと遷移させる
+        # これによりリンクが反応し、かつ COOP 制限を回避します
         st.markdown(
             f"""
-            <button onclick="window.top.location.href='{login_url}'" style="
-                background-color: #06C755;
-                color: white;
-                padding: 0.6rem 1rem;
-                border-radius: 0.5rem;
-                text-align: center;
-                font-weight: bold;
-                cursor: pointer;
-                border: none;
-                width: 100%;
-                font-size: 1rem;
-            ">
-                LINEでログイン
-            </button>
+            <a href="{login_url}" target="_top" style="text-decoration: none;">
+                <div style="
+                    background-color: #06C755;
+                    color: white;
+                    padding: 0.6rem 1rem;
+                    border-radius: 0.5rem;
+                    text-align: center;
+                    font-weight: bold;
+                    cursor: pointer;
+                    border: none;
+                    display: inline-block;
+                    width: 100%;
+                    font-size: 1rem;
+                ">
+                    LINEでログイン
+                </div>
+            </a>
             """,
             unsafe_allow_html=True
         )
