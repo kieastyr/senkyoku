@@ -3,6 +3,11 @@ import bcrypt
 import requests
 import urllib.parse
 import secrets
+import logging
+
+# --- Logging Configuration ---
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 # --- Page Configurations ---
 st.set_page_config(page_title="選曲ツール", layout="wide")
@@ -55,6 +60,11 @@ def handle_line_callback():
             )
             if profile_response.status_code == 200:
                 user_profile = profile_response.json()
+                # ユーザー情報のログ出力
+                logger.info(
+                    f"LINE Login Success: {user_profile.get('displayName')} (ID: {user_profile.get('userId')})"
+                )
+                
                 st.session_state["line_user"] = user_profile
                 st.session_state["password_correct"] = True
                 st.session_state["role"] = "tohyo"
@@ -70,6 +80,7 @@ USER_ROLES = {
     "senkyoku_user": "user",
     "senkyoku_voter": "voter",
     "senkyoku_result": "result",
+    "senkyoku_tohyo": "tohyo",
 }
 
 
