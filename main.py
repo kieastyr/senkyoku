@@ -9,6 +9,23 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
+
+def get_client_info():
+    """Gathers identification info for logging."""
+    try:
+        headers = st.context.headers
+        # Get IP address (considering potential proxies)
+        ip = headers.get("X-Forwarded-For", headers.get("Remote-Addr", "unknown")).split(",")[0]
+        user_agent = headers.get("User-Agent", "unknown")
+        username = st.session_state.get("username_logged_in", "unknown")
+        return f"[User: {username}] [IP: {ip}] [UA: {user_agent}]"
+    except Exception:
+        return "[Client Info: unknown]"
+
+
+# Log access
+logger.info(f"App accessed: {get_client_info()}")
+
 # --- Page Configurations ---
 st.set_page_config(page_title="選曲ツール", layout="wide")
 
