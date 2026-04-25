@@ -180,5 +180,3 @@ pages = {
 
 pg = st.navigation(pages.get(role, []))
 pg.run()
-pg.run()
-pg.run()
