@@ -132,9 +132,13 @@ if selected_id is not None:
     with col1:
         st.write(f"**合計分数:** {int(detail_row.get('合計分数', 0))} 分")
         st.write(f"**ハープ最大数:** {int(detail_row.get('ハープ最大数', 0))}")
-        st.write(f"**コンチェルト:** {detail_row.get('コンチェルト有', '-')}")
-        st.write(f"**楽譜調達:** {detail_row.get('楽譜調達有', '-')}")
-        st.write(f"**演奏会費増額分:** {detail_row.get('演奏会費増額分', '-')}")
+        # Helper to format boolean columns
+        def format_bool(val):
+            return "有" if val and str(val).lower() in ['true', '1', '有', 'yes'] else "無"
+
+        st.write(f"**コンチェルト:** {format_bool(detail_row.get('コンチェルト有'))}")
+        st.write(f"**楽譜調達:** {format_bool(detail_row.get('楽譜調達有'))}")
+        st.write(f"**演奏会費増額分:** {int(pd.to_numeric(detail_row.get('演奏会費増額分', 0))):,} 円")
 
     with col2:
         st.write("**楽器構成:**")
