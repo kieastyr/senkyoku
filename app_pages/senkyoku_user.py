@@ -1,10 +1,12 @@
 import re
+
 import pandas as pd
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 
 # --- 応募終了画面・ログアウト ---
 st.title("🎼 選曲組み合わせ提出ツール")
+
 
 def logout():
     st.session_state["password_correct"] = False
@@ -14,8 +16,11 @@ def logout():
         del st.session_state["username_logged_in"]
     st.rerun()
 
+
 st.button("ログアウト", on_click=logout)
-st.warning("現在、組み合わせ提出は受け付けていません。不明点は運営者までお問い合わせください。")
+st.warning(
+    "現在、組み合わせ提出は受け付けていません。不明点は運営者までお問い合わせください。"
+)
 st.stop()  # ここで停止させることで、これ以降の元のコードは実行されません
 
 # from streamlit_gsheets import GSheetsConnection  # This will be moved or kept below
@@ -439,6 +444,8 @@ with st.form("submission_form"):
                 st.balloons()
 
 if not can_submit and not all_selected.empty:
+    st.warning("提出するには、すべての条件を満たす必要があります。")
+    st.warning("提出するには、すべての条件を満たす必要があります。")
     st.warning("提出するには、すべての条件を満たす必要があります。")
     st.warning("提出するには、すべての条件を満たす必要があります。")
     st.warning("提出するには、すべての条件を満たす必要があります。")

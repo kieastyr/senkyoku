@@ -1,12 +1,15 @@
-import streamlit as st
+import logging
+import secrets
+import urllib.parse
+
 import bcrypt
 import requests
-import urllib.parse
-import secrets
-import logging
+import streamlit as st
 
 # --- Logging Configuration ---
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -15,16 +18,23 @@ def get_client_info():
     try:
         headers = st.context.headers
         # Get IP address (considering potential proxies)
-        ip = headers.get("X-Forwarded-For", headers.get("Remote-Addr", "unknown")).split(",")[0]
+        ip = headers.get(
+            "X-Forwarded-For", headers.get("Remote-Addr", "unknown")
+        ).split(",")[0]
         user_agent = headers.get("User-Agent", "unknown")
         username = st.session_state.get("username_logged_in", "unknown")
-        return f"[User: {username}] [IP: {ip}] [UA: {user_agent}]"
+        if username != "unknown":
+            return f"[User: {username}] [IP: {ip}] [UA: {user_agent}]"
+        else:
+            return None
     except Exception:
         return "[Client Info: unknown]"
 
 
 # Log access
-logger.info(f"App accessed: {get_client_info()}")
+log = get_client_info()
+if log:
+    logger.info(f"App accessed: {log}")
 
 # --- Page Configurations ---
 st.set_page_config(page_title="選曲ツール", layout="wide")
@@ -81,7 +91,7 @@ def handle_line_callback():
                 logger.info(
                     f"LINE Login Success: {user_profile.get('displayName')} (ID: {user_profile.get('userId')})"
                 )
-                
+
                 st.session_state["line_user"] = user_profile
                 st.session_state["password_correct"] = True
                 st.session_state["role"] = "tohyo"
@@ -169,4 +179,6 @@ pages = {
 }
 
 pg = st.navigation(pages.get(role, []))
+pg.run()
+pg.run()
 pg.run()

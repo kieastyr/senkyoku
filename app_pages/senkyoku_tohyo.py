@@ -1,10 +1,14 @@
-import streamlit as st
-import secrets
 import logging
+import secrets
+
+import streamlit as st
 
 # --- Logging Configuration ---
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
+
 
 # --- Logout Button ---
 def logout():
@@ -16,6 +20,7 @@ def logout():
     if "line_user" in st.session_state:
         del st.session_state["line_user"]
     st.rerun()
+
 
 # --- Main Page UI ---
 st.title("📱 選曲投票 (LINE認証済み)")
@@ -34,4 +39,6 @@ st.write(f"認証済み: **{user.get('displayName')}** さん")
 
 st.divider()
 st.header("HelloWorld!")
+st.write("LINE認証済みユーザー専用の投票ページです。")
+st.write("LINE認証済みユーザー専用の投票ページです。")
 st.write("LINE認証済みユーザー専用の投票ページです。")
