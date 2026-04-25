@@ -1,4 +1,5 @@
 import logging
+
 import pandas as pd
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
@@ -131,6 +132,9 @@ if selected_id is not None:
     with col1:
         st.write(f"**合計分数:** {int(detail_row.get('合計分数', 0))} 分")
         st.write(f"**ハープ最大数:** {int(detail_row.get('ハープ最大数', 0))}")
+        st.write(f"**コンチェルト:** {detail_row.get('コンチェルト有', '-')}")
+        st.write(f"**楽譜調達:** {detail_row.get('楽譜調達有', '-')}")
+        st.write(f"**演奏会費増額分:** {detail_row.get('演奏会費増額分', '-')}")
 
     with col2:
         st.write("**楽器構成:**")
